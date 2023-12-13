@@ -95,7 +95,45 @@
 	       SJH.error(sender, args, reject, resolve, SJH.executeQueryAsync, originalArguments);
 	    });
 	};
+SJH.addListItems = function (options) {
+	  return new RSVP.Promise(function(resolve, reject) {
+	    var context = SJH.Utils.getContext(options.site);
+	    SJH.Status.lastSiteUsed = options.site;
+	    var list = context.get_web().get_lists().getByTitle(options.list);
+		var results = [];
+		
+		listItems=options.data;
+		// for each item of in list items we create item in SharePoint list
+            for (var i = 0; i < listItems.length; i++) {
+ 
+                var listItem = listItems[i];
+                var listItemCreationInfo = new SP.ListItemCreationInformation();
+                var oListItem = list.addItem(listItemCreationInfo);
+ 
+                // for each property of current item, we assign field values
+                for (var field in listItem) {
+                    oListItem.set_item(field, listItem[field]);
+                }
+ 
+                // update and load SharePoint list item and add it to results array
+                oListItem.update();
+                context.load(oListItem);
+                results.push(oListItem);
+            }
+		
+	    // for (var key in options.data) {
+	      // if (options.data.hasOwnProperty(key)) {
+	        // listItem.set_item(key, options.data[key]);
+	      // }
+	    // }
 
+	   // listItem.update();
+
+	   // context.load(listItem); /* loading the item gets its ID */
+
+	    SJH.executeQueryAsync(context, resolve, reject, function() { return results });
+	  });
+	};
 	SJH.addListItem = function (options) {
 	  return new RSVP.Promise(function(resolve, reject) {
 	    var context = SJH.Utils.getContext(options.site);
@@ -162,6 +200,40 @@
 	  });
 	};
 
+	
+	SJH.updateListItems = function (options) {
+	  return new RSVP.Promise(function(resolve, reject) {
+	    var context = SJH.Utils.getContext(options.site);
+	    SJH.Status.lastSiteUsed = options.site;
+	    var list = context.get_web().get_lists().getByTitle(options.list);
+		var results = [];
+		
+		listItems=options.data;
+		// for each item of in list items we create item in SharePoint list
+            for (var i = 0; i < listItems.length; i++) {
+ 
+                var listItem = listItems[i];
+				
+                var oListItem = list.getItemById(listItem.Id);
+ 
+                // for each property of current item, we assign field values
+                for (var field in listItem) {
+					if(field!="Id" && field!="object"){
+					oListItem.set_item(field, listItem[field]);	
+					}
+                    
+                }
+ 
+                // update and load SharePoint list item and add it to results array
+                oListItem.update();
+                context.load(oListItem);
+                results.push(oListItem);
+            }
+		 
+	    SJH.executeQueryAsync(context, resolve, reject, function() { return results });
+	  });
+	};
+	
 	SJH.updateListItem = function (options) {
 	  return new RSVP.Promise(function(resolve, reject) {
 	    var context = SJH.Utils.getContext(options.site);
@@ -193,7 +265,31 @@
 	    SJH.executeQueryAsync(context, resolve, reject);
 	  });
 	};
+	
+	SJH.getCurrentUser = function(options) {
+	  return new RSVP.Promise(function(resolve, reject) {
+	    var context = SJH.Utils.getContext((options && options.site) || null);
+	    SJH.Status.lastSiteUsed = options.site;
+	    var web = context.get_web();
+	    var currentUser = web.get_currentUser();
 
+	    context.load(currentUser);
+console.log(currentUser);
+	    SJH.executeQueryAsync(context, resolve, reject, function() { return currentUser });
+	  });
+	};
+SJH.getCurrentUserName = function(options) {
+	  return new RSVP.Promise(function(resolve, reject) {
+	    var context = SJH.Utils.getContext((options && options.site) || null);
+	    SJH.Status.lastSiteUsed = options.site;
+	    var web = context.get_web();
+	    var currentUser = web.get_currentUser();
+
+	    context.load(currentUser);
+
+	    SJH.executeQueryAsync(context, resolve, reject, function() { return currentUser.get_title() });
+	  });
+	};
 	SJH.getCurrentUserEmail = function(options) {
 	  return new RSVP.Promise(function(resolve, reject) {
 	    var context = SJH.Utils.getContext((options && options.site) || null);
